@@ -1,0 +1,35 @@
+Línea 1: x - Identificadores
+Línea 1: = - Operadores
+Línea 1: 100 - Literales
+Línea 2: y - Identificadores
+Línea 2: = - Operadores
+Línea 2: sumar - Identificadores
+Línea 2: ( - Símbolos de Puntuación
+Línea 2: x - Identificadores
+Línea 2: , - Símbolos de Puntuación
+Línea 2: 20 - Literales
+Línea 2: ) - Símbolos de Puntuación
+Línea 3: c - Identificadores
+Línea 3: + - Operadores
+Línea 3: d - Identificadores
+Línea 3: + - Operadores
+Línea 3: f - Identificadores
+Línea 3: / - Operadores
+Línea 3: g - Identificadores
+Línea 3: - - Operadores
+Línea 3: H - Identificadores
+Línea 3: * - Operadores
+Línea 3: U - Identificadores
+Línea 4: z - Identificadores
+Línea 4: = - Operadores
+Línea 4: 9 - Literales
+Línea 4: + - Operadores
+Línea 4: 10 - Literales
+Línea 5: Y - Identificadores
+Línea 5: = - Operadores
+Línea 5: x - Identificadores
+Línea 5: * - Operadores
+Línea 5: y - Identificadores
+Línea 6: 3y - Token Erróneo
+Línea 6: = - Operadores
+Línea 6: í - Token Erróneo

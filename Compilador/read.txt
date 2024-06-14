@@ -1,0 +1,306 @@
+El archivo 'LexemaFinal' funciona como un&nbsp;Analizador semantico y sintactico, también nos muestra los errores en un archivo llamado 'LexicoResult.txt'. Se invita a modificar el archivo 'read.py' donde se puede poner formular correctas o erroneas.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+El archivo LexemaFinal cumple con la funcion de ser un Analizador semantico y sintactico, también nos sirve para identificar los errores
+
+Definición de patrones de tokens correctos:
+
+python
+
+token_patterns = {
+    'Palabras Clave': r'\b(?:def|if|else|return|class|for|while)\b',
+    'Identificadores': r'\b[a-zA-Z_][a-zA-Z_0-9]*\b',
+    'Literales': r'\b\d+\b',
+    'Operadores': r'[+\-*/=<>!]{1,2}',
+    'Símbolos de Puntuación': r'[;,.(){}[\]]',
+    'Espacios en Blanco': r'\s+',
+    'Comentarios': r'#.*'
+}
+Se utilizan expresiones regulares para definir varios tipos de tokens correctos, como palabras clave (e.g., def, if, else), identificadores (variables y nombres de funciones), literales numéricos, operadores, símbolos de puntuación, espacios en blanco y comentarios.
+
+Definición de patrones de tokens incorrectos:
+
+python
+
+token_patterns_error = [
+    r'\b\d+[a-zA-Z_][a-zA-Z0-9]*\b', # Identificadores que comienzan con un número
+    r'[áéíóúÁÉÍÓÚñÑ]',              # Caracteres con tildes o acentos
+    r'[+\-*/=<>!]{3,}',              # Más de dos signos de operación seguidos
+    r'(?<!\b)[-+*/=<>!]\d+'          # Número precedido inmediatamente por un operador (excepto el menos si es negativo)
+]
+
+Se definen patrones para detectar tokens incorrectos, como identificadores que comienzan con un número, caracteres con tildes o acentos, operadores con más de dos signos seguidos, y números precedidos inmediatamente por operadores.
+
+Función para verificar si un token es un error:
+
+python
+
+def es_error(token):
+    for pattern in token_patterns_error:
+        if re.search(pattern, token):
+            return True
+    return False
+Esta función recorre los patrones de tokens incorrectos y utiliza expresiones regulares para verificar si un token coincide con alguno de ellos.
+
+Función para analizar una línea del archivo:
+
+python
+
+def analizar_linea(linea, num_linea):
+    resultados = []
+    pos = 0
+    while pos < len(linea):
+        encontrado = False
+        # Verificar primero si algún patrón de error se aplica
+        for pattern in token_patterns_error:
+            regex = re.compile(pattern)
+            match = regex.match(linea, pos)
+            if match:
+                token = match.group(0)
+                resultados.append(f'Línea {num_linea}: {token} - Token Erróneo')
+                pos = match.end()
+                encontrado = True
+                break
+
+        if not encontrado:
+            # Buscar tokens correctos
+            for tipo, pattern in token_patterns.items():
+                regex = re.compile(pattern)
+                match = regex.match(linea, pos)
+                if match:
+                    token = match.group(0)
+                    if tipo != 'Espacios en Blanco':
+                        resultados.append(f'Línea {num_linea}: {token} - {tipo}')
+                    pos = match.end()
+                    break
+            else:
+                pos += 1  # Incrementar la posición si no se encontró coincidencia
+
+    return resultados
+Esta función analiza una línea de código buscando primero tokens incorrectos y luego tokens correctos. Si encuentra un token incorrecto, lo agrega a los resultados como un "Token Erróneo". Si encuentra un token correcto, lo clasifica según su tipo (excepto los espacios en blanco) y lo agrega a los resultados.
+
+Función principal para analizar el archivo:
+
+python
+
+def analizar_archivo(nombre_archivo_entrada, nombre_archivo_salida):
+    with open(nombre_archivo_entrada, 'r') as archivo_entrada, open(nombre_archivo_salida, 'w') as archivo_salida:
+        num_linea = 1
+        for linea in archivo_entrada:
+            resultados = analizar_linea(linea, num_linea)
+            for resultado in resultados:
+                archivo_salida.write(resultado + '\n')
+            num_linea += 1
+Esta función principal abre el archivo de entrada para lectura y el archivo de salida para escritura. Lee el archivo de entrada línea por línea, llama a analizar_linea para analizar cada línea y escribe los resultados en el archivo de salida.
+
+Ejecución del análisis:
+
+python
+
+analizar_archivo('read.py', 'LexicoResult.txt')
+Finalmente, se llama a la función analizar_archivo para analizar el archivo read.py y escribir los resultados en LexicoResult.txt.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Este es el archivo de Generacion de codigo intermedio
+
+Función evaluate_expression_from_file:
+
+python
+
+def evaluate_expression_from_file(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    results = []
+    for expression in lines:
+        print("Evaluating expression from file:", expression.strip())
+        result = evaluate_expression(expression.strip())
+        results.append(result)
+
+    return results
+Esta función abre un archivo especificado por file_path, lee todas las líneas del archivo (cada una representando una expresión matemática), y llama a evaluate_expression para evaluar cada expresión. Los resultados se almacenan en una lista results y se devuelven al final.
+
+Función evaluate_expression:
+
+python
+
+def evaluate_expression(expression):
+    print("Intermediate expression:", expression)
+    tokens = re.findall(r'[a-zA-Z_]+|\d+|[*/+-]', expression.replace(' ', ''))
+    output = []
+    temp_var_count = 1
+
+    # Procesar la expresión original y realizar multiplicaciones y divisiones primero
+    while '*' in tokens or '/' in tokens:
+        for i, token in enumerate(tokens):
+            if token in '*/':
+                left = tokens[i-1]
+                right = tokens[i+1]
+                operator = token
+                result = f"R{temp_var_count}"
+                temp_var_count += 1
+                output.append(f"{result} = {left} {operator} {right}")
+                tokens[i] = result
+                tokens.pop(i-1)
+                tokens.pop(i)
+                break
+        print("Intermediate expression:", ' '.join(tokens))
+
+    # Procesar sumas y restas
+    while '+' in tokens or '-' in tokens:
+        for i, token in enumerate(tokens):
+            if token in '+-':
+                left = tokens[i-1]
+                right = tokens[i+1]
+                operator = token
+                result = f"R{temp_var_count}"
+                temp_var_count += 1
+                output.append(f"{result} = {left} {operator} {right}")
+                tokens[i] = result
+                tokens.pop(i-1)
+                tokens.pop(i)
+                break
+        print("Intermediate expression:", ' '.join(tokens))
+
+    # Imprimir todas las operaciones intermedias
+    for line in output:
+        print(line)
+
+    return tokens[0]
+Esta función toma una expresión matemática como cadena de texto y la evalúa. Los pasos son los siguientes:
+
+Divide la expresión en tokens utilizando expresiones regulares, identificando números, operadores y variables.
+Primero, procesa todas las multiplicaciones y divisiones en la expresión, creando variables temporales (R1, R2, etc.) para almacenar resultados intermedios.
+Luego, procesa todas las sumas y restas de manera similar.
+Muestra todas las operaciones intermedias realizadas.
+Finalmente, devuelve el resultado final de la expresión.
+Uso de las funciones:
+
+python
+
+file_path = 'read.py'  # Asegúrate de que este archivo exista y tenga las expresiones adecuadas
+results = evaluate_expression_from_file(file_path)
+for idx, res in enumerate(results):
+    print(f"Result of expression {idx+1}:", res)
+En esta parte, se especifica el archivo read.py (que debe contener las expresiones a evaluar). Se llama a evaluate_expression_from_file para leer y evaluar las expresiones en el archivo, y luego se imprimen los resultados de cada expresión.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Este es el codigo de CodigoIntermedioFileOptimizado.py Es más modular y reutiliza la lógica de procesamiento de operadores a través de una función auxiliar, mejorando la claridad y el mantenimiento del código
+
+Función evaluate_expression_from_file
+python
+def evaluate_expression_from_file(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    results = []
+    for expression in lines:
+        print("Evaluating expression from file:", expression.strip())
+        result = evaluate_expression(expression.strip())
+        results.append(result)
+
+    return results
+Propósito: Leer un archivo que contiene expresiones matemáticas, evaluar cada expresión y devolver los resultados.
+Funcionamiento:
+Abre el archivo especificado por file_path.
+Lee todas las líneas del archivo, cada una representando una expresión.
+Llama a evaluate_expression para evaluar cada expresión.
+Almacena los resultados de cada evaluación en una lista results.
+Devuelve la lista de resultados.
+2. Función evaluate_expression
+python
+def evaluate_expression(expression):
+    print("Intermediate expression:", expression)
+    tokens = re.findall(r'[a-zA-Z_]+|\d+|[*/+-]', expression.replace(' ', ''))
+    output = []
+    temp_var_count = 1
+
+    def process_operators(tokens, operators):
+        nonlocal temp_var_count
+        new_tokens = []
+        i = 0
+        while i < len(tokens):
+            if tokens[i] in operators:
+                left = new_tokens.pop()  # take the last item in new_tokens
+                right = tokens[i+1]
+                operator = tokens[i]
+                result = f"R{temp_var_count}"
+                temp_var_count += 1
+                output.append(f"{result} = {left} {operator} {right}")
+                new_tokens.append(result)
+                i += 2  # skip next token because it's already processed
+            else:
+                new_tokens.append(tokens[i])
+                i += 1
+        return new_tokens
+
+    # Process '*' and '/'
+    tokens = process_operators(tokens, '*/')
+    print("After */ processing:", ' '.join(tokens))
+
+    # Process '+' and '-'
+    tokens = process_operators(tokens, '+-')
+    print("After +- processing:", ' '.join(tokens))
+
+    for line in output:
+        print(line)
+
+    return tokens[0]
+Propósito: Evaluar una expresión matemática y mostrar las operaciones intermedias.
+Funcionamiento:
+Imprime la expresión original.
+Utiliza una expresión regular para dividir la expresión en tokens (números, operadores y variables).
+Define una función interna process_operators para procesar operadores específicos (multiplicación/división o suma/resta).
+La función process_operators:
+Itera sobre los tokens y aplica los operadores especificados.
+Almacena los resultados intermedios en nuevas variables (R1, R2, etc.).
+Devuelve una lista de nuevos tokens que representan la expresión simplificada.
+Procesa primero las multiplicaciones y divisiones.
+Luego, procesa las sumas y restas.
+Imprime todas las operaciones intermedias realizadas.
+Devuelve el resultado final de la expresión.
+3. Ejecución del Código
+python
+file_path = 'read.py'  # Asegúrate de que este archivo exista y tenga las expresiones adecuadas
+results = evaluate_expression_from_file(file_path)
+for idx, res in enumerate(results):
+    print(f"Result of expression {idx+1}:", res)
+Propósito: Ejecutar el proceso de evaluación de expresiones desde un archivo.
+Funcionamiento:
+Especifica el archivo read.py como la fuente de las expresiones.
+Llama a evaluate_expression_from_file para leer y evaluar las expresiones del archivo.
+Imprime los resultados de cada expresión evaluada.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+El codigo de CodigoIntermedioFile.py tiene:
+Estructura Directa: La lógica de procesamiento de multiplicaciones/divisiones y sumas/restas está directamente en el cuerpo de la función evaluate_expression.
+Duplicación de Código: Las secciones para procesar multiplicaciones/divisiones y sumas/restas son muy similares y están duplicadas en el código.
+Procesamiento Iterativo: Utiliza bucles while y for para iterar sobre los tokens y realizar las operaciones correspondientes.
+
+Mientras tanto el codigo de CodigoIntermedioFileOptimizado.py tiene:
+Modularización: Introduce una función auxiliar process_operators para procesar operadores, haciendo que el código sea más limpio y modular. Especificamente en:
+def process_operators(tokens, operators):
+    nonlocal temp_var_count
+    new_tokens = []
+    i = 0
+    while i < len(tokens):
+        if tokens[i] in operators:
+            left = new_tokens.pop()  # take the last item in new_tokens
+            right = tokens[i+1]
+            operator = tokens[i]
+            result = f"R{temp_var_count}"
+            temp_var_count += 1
+            output.append(f"{result} = {left} {operator} {right}")
+            new_tokens.append(result)
+            i += 2  # skip next token because it's already processed
+        else:
+            new_tokens.append(tokens[i])
+            i += 1
+    return new_tokens
+
+Reutilización de Código: La lógica para manejar operadores se encapsula en process_operators, eliminando la duplicación de código.
+Claridad y Mantenimiento: La función evaluate_expression se vuelve más legible y fácil de mantener, ya que delega el procesamiento de operadores a la función process_operators.
